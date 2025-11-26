@@ -5,9 +5,9 @@ RUN apt-get update && \
     apt-get install -y \
         curl \
         ca-certificates \
+        python3 \
         iproute2 \
         iptables \
-        python3 \
         gnupg && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -22,7 +22,7 @@ RUN echo "Tailscale + HTTP server is running..." > index.html
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# HTTP port
+# Render will set $PORT at runtime; 8080 is just a hint
 EXPOSE 8080
 
 # Start Tailscale + HTTP server
