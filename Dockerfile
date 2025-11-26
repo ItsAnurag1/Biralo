@@ -1,29 +1,24 @@
 FROM ubuntu:22.04
 
+# Non-interactive apt
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install dependencies
 RUN apt-get update && \
-    apt-get install -y \
-        curl \
-        ca-certificates \
-        python3 \
-        iproute2 \
-        iptables \
-        gnupg && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get install -y curl python3 ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install Tailscale
-RUN curl -fsSL https://tailscale.com/install.sh | sh
+# Download and install sshx
+# This script detects arch/OS and puts sshx in /usr/local/bin
+RUN curl -sSf https://sshx.io/get | sh
 
-# App directory and dummy page
+# Create dummy web content to keep Render service alive
 WORKDIR /app
-RUN echo "Tailscale + HTTP server is running..." > index.html
+RUN echo "SSHX is running on Render..." > index.html
 
-# Copy entrypoint script
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# Render will set $PORT at runtime; 8080 is just a hint
+# Render needs an open port – we'll use 8080
 EXPOSE 8080
 
-# Start Tailscale + HTTP server
-CMD ["/entrypoint.sh"]
+# Start a simple HTTP server in background, then start sshx in foreground
+# sshx must stay in the foreground so Render treats the service as "up"
+CMD ["sh", "-lc", "python3 -m http.server 8080 & sshx serve --once"]
