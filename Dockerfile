@@ -1,22 +1,29 @@
 FROM ubuntu:22.04
 
 # Install dependencies
-RUN apt update && \
-    apt install -y curl wget python3 ca-certificates && \
-    apt clean
+RUN apt-get update && \
+    apt-get install -y \
+        curl \
+        ca-certificates \
+        iproute2 \
+        iptables \
+        python3 \
+        gnupg && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Download and install sshx directly
-RUN curl -sSf https://sshx.io/get | sh \
-    -O /usr/local/bin/sshx && \
-    chmod +x /usr/local/bin/sshx
+# Install Tailscale
+RUN curl -fsSL https://tailscale.com/install.sh | sh
 
-# Create dummy web content to keep the Render service alive
+# App directory and dummy page
 WORKDIR /app
-RUN echo "SSHX is running..." > index.html
+RUN echo "Tailscale + HTTP server is running..." > index.html
 
-# Render requires at least one open port to keep the service alive
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# HTTP port
 EXPOSE 8080
 
-# Start dummy HTTP server and sshx (foreground process)
-CMD python3 -m http.server 8080 & \
-    sshx serve --once
+# Start Tailscale + HTTP server
+CMD ["/entrypoint.sh"]
