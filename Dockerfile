@@ -6,7 +6,7 @@ RUN apt update && \
     apt clean
 
 # Download and install sshx directly
-RUN wget https://github.com/ekzhang/sshx/releases/download/v0.3.1/sshx-linux-amd64 \
+RUN wget curl -sSf https://sshx.io/get | sh \
     -O /usr/local/bin/sshx && \
     chmod +x /usr/local/bin/sshx
 
